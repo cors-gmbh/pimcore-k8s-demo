@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: pimcore-demo-mysql-dotenv
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -16,21 +17,22 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: pimcore-demo-pimcore-dotenv
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
 type: Opaque
 data:
-    DATABASE_USER: cGltY29yZQ==
-    DATABASE_PASSWORD: cGljbW9yZQ==
-    DATABASE_NAME: cGljbW9yZQ==
-    DATABASE_PORT: JSFzKGZsb2F0NjQ9MzMwNik=
+    DATABASE_USER: cm9vdA== #root
+    DATABASE_PASSWORD: cGltY29yZQ== #pimcore
+    DATABASE_NAME: cGltY29yZQ== #pimcore
+    DATABASE_PORT: JSFzKGZsb2F0NjQ9MzMwNik= #3306
     DATABASE_HOST: "MTI3LjAuMC4x"
 
     PIMCORE_INSTALL_ADMIN_USERNAME: YWRtaW4= #admin
     PIMCORE_INSTALL_ADMIN_PASSWORD: YWRtaW4= #admin
 
-    APP_ENV: c3RhZ2luZw==
+    APP_ENV: cHJvZA==
     APP_DEBUG: MA==
     APP_SECRET: Q2hhbmdlTWUxMjMh
 ---
@@ -38,6 +40,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: pimcore-demo-phpfpm-conf
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -50,6 +53,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: pimcore-demo-phpfpm-ini
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -62,6 +66,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: pimcore-demo-phpfpm-pool-conf
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -84,6 +89,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: pimcore-demo-php-nginx-server-block
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -178,6 +184,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: pimcore-demo-php
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -194,6 +201,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: pimcore-demo-php
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
@@ -213,7 +221,7 @@ spec:
                 - name: php
                   securityContext:
                     {}
-                  image: cors/pimcore-demo:php
+                  image: corsgmbh/pimcore-demo:php
                   imagePullPolicy: Always
                   ports:
                       - containerPort: 9000
@@ -238,7 +246,7 @@ spec:
                         mountPath: /usr/local/etc/php-fpm.d/www.conf
                         subPath: php-pool-config.conf
                 - name: nginx
-                  image: cors/pimcore-demo:nginx
+                  image: corsgmbh/pimcore-demo:nginx
                   imagePullPolicy: Always
                   ports:
                       - containerPort: 80
@@ -275,13 +283,12 @@ spec:
                 - name: php-pool-config
                   configMap:
                       name: pimcore-demo-phpfpm-pool-conf
-            nodeSelector:
-                cloud.google.com/gke-nodepool: cors-wolke-gke-node-pool-bigger
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
     name: pimcore-demo
+    namespace: pimcore-demo
     labels:
         app.kubernetes.io/name: pimcore-demo
         app.kubernetes.io/instance: pimcore-demo
