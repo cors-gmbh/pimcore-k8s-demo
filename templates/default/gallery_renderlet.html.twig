@@ -1,0 +1,13 @@
+<section class="row">
+    {% if asset %}
+            {% for image in asset.getChildren() %}
+                {% if image is instanceof('\\Pimcore\\Model\\Asset\\Image') %}
+                    <div class="col-md-4">
+                        <a href="{{ image.getThumbnail('galleryLightbox')|raw }}" class="thumbnail">
+                            {{ image.getThumbnail('galleryThumbnail').getHTML({imgAttributes: {class: 'img-thumbnail img-responsive'}})|raw }}
+                        </a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+    {% endif %}
+</section>

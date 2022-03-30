@@ -1,0 +1,31 @@
+{% if editmode %}
+    {% do pimcore_head_link().appendStylesheet(asset('static/css/editmode.css')) %}
+    {{ pimcore_head_link() }}
+{% endif %}
+{#footer#}
+<footer class="container py-5">
+    <div class="row">
+        <div class="col-12 col-md">
+            <a class="text-dark text-decoration-none" href="/" >
+                <img id="logo-footer" src="{{ asset('/static/images/logo-dark.svg') }}" >
+                <small class="d-block mb-3  p-3">&copy; {{ "now"|date('Y') }} pimcore GmbH</small>
+            </a>
+        </div>
+        {% if editmode %}
+            <h3 class="float-left">{{ 'Footer Column(s):' }}</h3>
+        {% endif %}
+        {% for i in pimcore_iterate_block(pimcore_block('mainlinkblock')) %}
+            <div class="col-6 col-md">
+                <h5>{{ pimcore_input('mainBlockTitle', {'placeholder': 'Footer Title'}) }}</h5>
+                <ul class="list-unstyled text-small">
+                    {% for i in pimcore_iterate_block(pimcore_block('linkblock')) %}
+                        <li>{{ pimcore_link('myLink', {'class': "text-muted"}) }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if editmode %}
+                <hr />
+            {% endif %}
+        {% endfor %}
+    </div>
+</footer>

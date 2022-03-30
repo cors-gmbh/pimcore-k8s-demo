@@ -1,0 +1,11 @@
+{% extends 'layouts/layout.html.twig' %}
+
+{% block content %}
+    {#Hero caraousel#}
+    {{ include('includes/hero-carousel.html.twig') }}
+    <div id="portal" class="portal-page">
+        {{ pimcore_areablock('content', {
+            'allowed': ['hero-teaser', 'standard-teaser', 'hero-grid', 'product-teaser', 'gallery-carousel', 'horizontal-line', 'image', 'image-hotspot-marker', 'video', 'personalized-product-teaser']
+        }) }}
+    </div>
+{% endblock %}

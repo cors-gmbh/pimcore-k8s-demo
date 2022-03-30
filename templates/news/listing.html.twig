@@ -1,0 +1,65 @@
+{% extends 'layouts/layout.html.twig' %}
+
+
+{% block content %}
+
+    <div id="main-content" class="main-content">
+
+        {% if document.getTitle() is empty %}
+            {% do pimcore_head_title(pimcore_input('headline').getData(), 'PREPEND') %}
+        {% endif %}
+
+        <div class="page-header">
+            <h1>{{ pimcore_input('headline', {'placeholder':'Headline'}) }}</h1>
+        </div>
+
+        {{
+            pimcore_areablock('content', {
+                'allowed': [
+                    'headlines',
+                    'hero-teaser',
+                    'horizontal-line',
+                    'wysiwyg'
+                ]
+            })
+        }}
+
+        <div class="row">
+            <ul class="list-unstyled">
+                {%  for news in news %}
+                    {# @var news \Pimcore\Model\DataObject\News #}
+                    {% set detailLink = app_news_detaillink(news) %}
+
+                    <li class="media my-3">
+                        {% if news.gallery.items %}
+                            {% set image = news.gallery.current %}
+
+                            {% if image.image %}
+                                <a href="{{ detailLink }}">
+                                    {{ image.image.thumbnail('newsList').html({imgAttributes: {class: 'mr-3'}}) | raw }}
+                                </a>
+                            {% endif %}
+                        {% endif %}
+
+                        <div class="media-body">
+                            <h5 class="mt-0">
+                                <a href="{{ detailLink }}" class="text-decoration-none text-dark">
+                                    {{ news.title }}
+                                </a>
+                            </h5>
+                            {{ news.shortText }}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="pt-5">
+
+            {% include 'includes/pagination.html.twig' %}
+
+        </div>
+
+    </div>
+
+{%  endblock %}

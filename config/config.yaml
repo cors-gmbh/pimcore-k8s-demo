@@ -1,0 +1,51 @@
+imports:
+    - { resource: 'local/' }
+    - { resource: ecommerce/base-ecommerce.yaml }
+    - { resource: cmf.yaml }
+    - { resource: workflows.yaml }
+
+parameters:
+    database_driver: '%env(DATABASE_DRIVER)%'
+    database_host: '%env(DATABASE_HOST)%'
+    database_port: '%env(DATABASE_PORT)%'
+    database_name: '%env(DATABASE_NAME)%'
+    database_user: '%env(DATABASE_USER)%'
+    database_password: '%env(DATABASE_PASSWORD)%'
+    database_version: '%env(DATABASE_VERSION)%'
+
+doctrine:
+    dbal:
+        connections:
+            default:
+                driver: '%database_driver%'
+                host: '%database_host%'
+                port: '%database_port%'
+                dbname: '%database_name%'
+                user: '%database_user%'
+                password: '%database_password%'
+                charset: 'utf8mb4'
+                mapping_types: { enum: string, bit: boolean }
+                server_version: '%database_version%'
+
+pimcore:
+    security:
+        encoder_factories:
+            Pimcore\Model\DataObject\Customer: cmf.security.user_password_encoder_factory
+
+    sitemaps:
+        generators:
+            app_news:
+                enabled: true
+                priority: 50
+                generator_id: App\Sitemaps\NewsGenerator
+            app_cars:
+                enabled: true
+                priority: 49
+                generator_id: App\Sitemaps\ProductGenerator
+            app_category:
+                enabled: true
+                priority: 48
+                generator_id: App\Sitemaps\CategoryGenerator
+
+            pimcore_documents:
+                enabled: true

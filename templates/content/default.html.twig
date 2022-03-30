@@ -1,0 +1,20 @@
+{% extends 'layouts/layout.html.twig' %}
+
+{% block content %}
+    <div id="main-content" class="main-content" >
+        {% if document.getTitle() is empty %}
+            {% do pimcore_head_title(pimcore_input('headline').getData(), 'PREPEND') %}
+        {% endif %}
+
+        <div class="page-header">
+            <h1>{{ pimcore_input('headline', {'placeholder':'Headline'}) }}</h1>
+        </div>
+
+        {{ pimcore_areablock('content', {
+            'allowed': ['blockquote', 'embed', 'featurette', 'gallery-carousel', 'gallery-folder',
+                'gallery-single-images', 'headlines', 'horizontal-line', 'icon-teaser-row', 'image',
+                'image-hotspot-marker', 'image-metadata', 'pdf', 'product-grid', 'product-teaser', 'standard-teaser', 'text-accordion',
+                'time-slider-featurette', 'video', 'wysiwyg', 'wysiwyg-with-images', 'personalized-product-teaser']
+        }) }}
+    </div>
+{% endblock %}

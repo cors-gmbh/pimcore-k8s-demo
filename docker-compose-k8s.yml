@@ -1,0 +1,55 @@
+version: '3.4'
+
+networks:
+  cors_dev:
+    external: true
+
+services:
+  db:
+    image: mysql:8
+    container_name: pimcore-demo-db
+    networks:
+      - cors_dev
+    environment:
+      - MYSQL_ROOT_PASSWORD=ROOT
+      - MYSQL_DATABASE=pimcore
+      - MYSQL_USER=pimcore
+      - MYSQL_PASSWORD=pimcore
+
+  php:
+    build:
+      context: ./
+      target: cors_php
+    container_name: pimcore-demo-php
+    networks:
+      - cors_dev
+    depends_on:
+     - db
+    environment:
+      - COMPOSER_AUTH=${COMPOSER_AUTH}
+      - DATABASE_DRIVER=pdo_mysql
+      - DATABASE_HOST=pimcore-demo-db
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=pimcore
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=ROOT
+      - DATABASE_VERSION=8.0.26
+      - PIMCORE_INSTALL_ADMIN_USERNAME=admin
+      - PIMCORE_INSTALL_ADMIN_PASSWORD=admin
+
+  nginx:
+    build:
+      context: ./
+      target: cors_nginx
+    container_name: pimcore-demo-nginx
+    depends_on:
+        - php
+    networks:
+      - cors_dev
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pimcore_demo.rule=Host(`pimcore-demo.localhost`)
+      - traefik.http.routers.pimcore_demo.entrypoints=cors_dev
+      - traefik.http.routers.pimcore_demo.tls=true
+      - traefik.http.services.pimcore_demo.loadbalancer.server.port=80
+      - traefik.docker.network=cors_dev

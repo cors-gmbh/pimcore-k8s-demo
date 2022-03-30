@@ -1,0 +1,46 @@
+{% extends 'layouts/layout.html.twig' %}
+{% form_theme form 'bootstrap_4_layout.html.twig' %}
+
+
+{% block content %}
+
+    <div class="text-center">
+
+        <div class="form-signin mb-5">
+
+
+            {% if error %}
+                <div class="alert alert-danger">
+                    {{ error.getMessage() }}
+                </div>
+            {% endif %}
+
+            {{ form_start(form) }}
+                <h1 class="display-3 mb-3 font-weight-normal">{{ 'general.please-sign-in' | trans }}</h1>
+                {{ form_widget(form._username, { 'attr': {'placeholder': 'Username'}}) }}
+                {{ form_widget(form._password, { 'attr': {'placeholder': 'Password'}}) }}
+
+                <input type="hidden" name="_csrf_token"
+                       value="{{ csrf_token('authenticate') }}"
+                >
+
+                <div class="custom-control custom-checkbox mb-3">
+                    <input name="_remember_me" type="checkbox" class="custom-control-input" id="rememberMe">
+                    <label class="custom-control-label" for="rememberMe">Remember me</label>
+                </div>
+
+                {{ form_row(form._submit, {'attr': {'class': 'btn-success btn-lg btn-block mt-4'}}) }}
+
+            {{ form_end(form) }}
+
+            <p>{{ 'account.forgot-password' | trans }} <a href="{{ path('account-password-send-recovery') }}">{{ 'account.password-recovery' | trans }}</a></p>
+            <p>{{ 'general.no-account' | trans }} <a href="{{ path('account-register') }}">{{ 'general.register-now' | trans }}</a></p>
+
+
+            {% include 'account/partial/social_buttons.html.twig' with {'connect': false} %}
+
+
+        </div>
+    </div>
+
+{% endblock %}

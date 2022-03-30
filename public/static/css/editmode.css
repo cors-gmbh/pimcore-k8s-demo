@@ -1,0 +1,135 @@
+h5 {
+    font-size: 1.5em;
+}
+
+.pimcore_block_entry {
+    margin-bottom: 5vh;
+}
+
+.grid-gallery-item {
+    position: relative;
+}
+
+.grid-gallery-item .tint {
+    display: block;
+}
+
+.grid-gallery-item .pimcore_block_entry {
+    flex: 0 0 50%;
+}
+
+.grid-gallery-item-text  {
+    position: absolute;
+    bottom: 30px;
+    z-index: 10;
+    color: #fff;
+    text-align: center;
+}
+
+.pimcore_block_buttons {
+    margin-bottom: 2vh;
+}
+
+.carousel-imageblock {
+    background-color: var(--dark-gray);
+}
+
+
+.custom-product-card {
+    margin-bottom: 3.5rem !important;
+}
+
+/*.editmode-label {*/
+/*    margin-bottom: 3px;*/
+/*}*/
+
+/*.editmode-label label {*/
+/*    padding-right: 5px;*/
+/*}*/
+
+.teaser-icon > .icon > .image {
+    line-height: normal;
+    padding-top: 20px;
+}
+
+.teaser-icon .icon .pimcore_editable_select {
+    position: absolute;
+    right: -70px;
+    top: 15px;
+}
+
+.teaser-icon .icon .image input {
+    visibility: hidden;
+}
+
+.teaser-icon > .icon > .info > p, .teaser-icon > .icon > .info > div {
+    margin: 1em 0 1em 0;
+    padding: .15em;
+}
+
+.area-gallery-single-images .pimcore_block_entry {
+    float:left;
+    clear:none;
+    width: 30%;
+}
+
+
+.pimcore_area_edit_button {
+    z-index: 99999;
+}
+
+#heroCarousel {
+    margin-bottom: 20px;
+}
+
+.editmode-label {
+    padding-top: 7px;
+    padding-right: 5px;
+    display: inline-block;
+}
+
+.pt-7px {
+    padding-top: 7px;
+}
+
+.area-gallery-carousel .carousel-inner .pimcore_editable_image {
+    min-height: 350px !important;
+}
+
+.area-gallery-carousel .carousel-inner .carousel-caption {
+    top: 15vh;
+}
+
+.carousel .carousel-indicators li {
+    background-color: #000000;
+}
+
+.jumbotron-btn {
+    margin-right: 3em;
+}
+
+.pimcore_area_text-accordion .card-header .pimcore_editable_input {
+    padding-left: 10px;
+}
+
+.gallery .item {
+    min-height: 200px;
+}
+
+.pimcore_area_product-teaser .teaser-row-container .pimcore_editable_block {
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.pimcore_area_product-teaser .teaser-row-container  .pimcore_block_entry,
+.pimcore_area_personalized-product-teaser .teaser-row-container .teaser-col {
+    width: 33%;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.pimcore_editable .x-panel-body-default {
+    font-family: "Hind Guntur";
+}

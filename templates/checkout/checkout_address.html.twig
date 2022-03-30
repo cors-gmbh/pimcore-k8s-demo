@@ -1,0 +1,78 @@
+{% extends 'layouts/layout.html.twig' %}
+{% form_theme form 'bootstrap_4_layout.html.twig' %}
+
+
+{% block content %}
+
+    <div class="py-5 bg-light">
+        <div class="container">
+
+            <div class="row">
+
+                <div class="col-md-8">
+                    <h4 class="mb-3">{{ 'checkout.billing-address' | trans }}</h4>
+
+                    {% if(not app.user) %}
+                        <div class="mb-5">
+                            {% include 'account/partial/social_buttons.html.twig' with {'connect': false} %}
+                        </div>
+                    {% endif %}
+
+                    {{ form_start(form) }}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.firstname) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.lastname) }}
+                            </div>
+                        </div>
+                        {{ form_row(form.email) }}
+                        {{ form_row(form.company) }}
+                        {{ form_row(form.street) }}
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form_row(form.zip) }}
+                            </div>
+                            <div class="col-md-8">
+                                {{ form_row(form.city) }}
+                            </div>
+                        </div>
+                        {{ form_row(form.countryCode) }}
+
+                        <hr/>
+
+                    <div class="form-group">
+                        {% do form.terms.setRendered %}
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" id="{{ form.terms.vars.id }}" name="{{ form.terms.vars.name }}" {{ form.terms.vars.required ? 'required="required"' : '' }} class="custom-control-input" value="{{ form.terms.vars.value }}">
+                            <label class="checkbox-custom custom-control-label {{ form.terms.vars.required ? 'required' : '' }}" for="{{ form.terms.vars.id }}">
+                                {{ 'checkout.terms' | trans([document.getProperty('terms_and_conditions')]) | raw }}
+                            </label>
+                        </div>
+                    </div>
+
+{#                    {{ form_widget(form.terms) }}#}
+
+{#                        {{ form_row(form.terms, {'label': ( 'checkout.terms' | trans([document.getProperty('terms_and_conditions')]) | raw ), label_attr: {class: 'checkbox-custom'} }) }}#}
+
+                        <hr/>
+
+                    {{ form_row(form._submit, {'attr': {'class': 'btn-success btn-lg btn-block'}}) }}
+
+                    {{ form_end(form) }}
+
+                </div>
+                <div class="col-md-4 mb-4 mt-5 mt-md-0">
+                    {% include 'cart/shared/order_summary.html.twig' %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+

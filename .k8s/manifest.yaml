@@ -1,0 +1,305 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: pimcore-demo-mysql-dotenv
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+type: Opaque
+data:
+    MYSQL_ROOT_PASSWORD: cGltY29yZQ== #pimcore
+    MYSQL_DATABASE: cGltY29yZQ== #pimcore
+    MYSQL_USER: cGltY29yZQ== #pimcore
+    MYSQL_PASSWORD: cGltY29yZQ== #pimcore
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: pimcore-demo-pimcore-dotenv
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+type: Opaque
+data:
+    DATABASE_USER: cGltY29yZQ==
+    DATABASE_PASSWORD: cGljbW9yZQ==
+    DATABASE_NAME: cGljbW9yZQ==
+    DATABASE_PORT: JSFzKGZsb2F0NjQ9MzMwNik=
+    DATABASE_HOST: "MTI3LjAuMC4x"
+
+    PIMCORE_INSTALL_ADMIN_USERNAME: YWRtaW4= #admin
+    PIMCORE_INSTALL_ADMIN_PASSWORD: YWRtaW4= #admin
+
+    APP_ENV: c3RhZ2luZw==
+    APP_DEBUG: MA==
+    APP_SECRET: Q2hhbmdlTWUxMjMh
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: pimcore-demo-phpfpm-conf
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+data:
+    php-config.conf: |
+        [global]
+        include=etc/php-fpm.d/*.conf
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: pimcore-demo-phpfpm-ini
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+data:
+    php.ini: |
+        [PHP]
+        memory_limit = 512m
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: pimcore-demo-phpfpm-pool-conf
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+data:
+    php-pool-config.conf: |
+        [www]
+        user = www-data
+        group = www-data
+        listen = 0.0.0.0:9000
+        pm = static
+        pm.start_servers = 4
+        pm.min_spare_servers = 2
+        pm.max_spare_servers = 4
+        pm.max_children = 10
+        pm.max_requests = 200
+        pm.process_idle_timeout = 10s
+        ping.path = /ping
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: pimcore-demo-php-nginx-server-block
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+data:
+    default.conf: |
+        upstream php-pimcore {
+          server 127.0.0.1:9000;
+        }
+        
+        server {
+          listen 80;
+          server_name _;
+          root /var/www/html/public;
+          index index.php;
+        
+          access_log  /dev/stdout;
+          error_log   /dev/stderr error;
+        
+          client_max_body_size 100m;
+        
+          rewrite ^/cache-buster-(?:\d+)/(.*) /$1 last;
+        
+          add_header Content-Security-Policy upgrade-insecure-requests;
+        
+          location ~* /var/assets/.*\.php(/|$) {
+            return 404;
+          }
+        
+          location ~* /\.(?!well-known/) {
+            deny all;
+            log_not_found off;
+            access_log off;
+          }
+        
+          location ~* (?:\.(?:bak|conf(ig)?|dist|fla|in[ci]|log|psd|sh|sql|sw[op])|~)$ {
+            deny all;
+          }
+        
+          location ~* ^/admin/(adminer|external) {
+            rewrite .* /index.php$is_args$args last;
+          }
+        
+          location ~* .*/(image|video)-thumb__\d+__.* {
+            try_files /var/tmp/thumbnails$uri /index.php;
+            expires 2w;
+            access_log off;
+            add_header Cache-Control "public";
+          }
+        
+          location ~* ^(?!/admin)(.+?)\.((?:css|js)(?:\.map)?|jpe?g|gif|png|svgz?|eps|exe|gz|zip|mp\d|ogg|ogv|webm|pdf|docx?|xlsx?|pptx?)$ {
+            try_files /var/assets$uri $uri =404;
+            expires 2w;
+            access_log off;
+            log_not_found off;
+            add_header Cache-Control "public";
+          }
+        
+          location / {
+            error_page 404 /meta/404;
+            try_files $uri /index.php$is_args$args;
+          }
+        
+          location /api/graphql {
+              auth_basic off;
+              error_page 404 /meta/404;
+              try_files $uri /app.php$is_args$args;
+          }
+        
+          location /api/graphql/explorer {
+              auth_basic off;
+              error_page 404 /meta/404;
+              try_files $uri /app.php$is_args$args;
+          }
+        
+          location ~ ^/index\.php(/|$) {
+            send_timeout 1800;
+            fastcgi_read_timeout 1800;
+            fastcgi_send_timeout 1800;
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+            try_files $fastcgi_script_name =404;
+            include fastcgi.conf;
+            set $path_info $fastcgi_path_info;
+            fastcgi_param PATH_INFO $path_info;
+            fastcgi_pass php-pimcore;
+            fastcgi_param TRUSTED_PROXIES 10.0.0.0/16;
+            fastcgi_param HTTP_X_FORWARDED_FOR $http_x_real_ip;
+            internal;
+          }
+        }
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: pimcore-demo-php
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+spec:
+    type: ClusterIP
+    ports:
+        - port: 80
+          targetPort: 80
+    selector:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo-php
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: pimcore-demo-php
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: pimcore-demo
+            app.kubernetes.io/instance: pimcore-demo-php
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: pimcore-demo
+                app.kubernetes.io/instance: pimcore-demo-php
+        spec:
+            containers:
+                - name: php
+                  securityContext:
+                    {}
+                  image: cors/pimcore-demo:php
+                  imagePullPolicy: Always
+                  ports:
+                      - containerPort: 9000
+                  resources:
+                      limits:
+                          cpu: "1"
+                          memory: 1G
+                      requests:
+                          cpu: "0.5"
+                          memory: 1G
+                  envFrom:
+                      - secretRef:
+                            name: pimcore-demo-pimcore-dotenv
+                  volumeMounts:
+                      - name: php-ini
+                        mountPath: /usr/local/etc/php/php.ini
+                        subPath: php.ini
+                      - name: php-config
+                        mountPath: /usr/local/etc/php-fpm.conf
+                        subPath: php-config.conf
+                      - name: php-pool-config
+                        mountPath: /usr/local/etc/php-fpm.d/www.conf
+                        subPath: php-pool-config.conf
+                - name: nginx
+                  image: cors/pimcore-demo:nginx
+                  imagePullPolicy: Always
+                  ports:
+                      - containerPort: 80
+                  resources:
+                      limits:
+                          cpu: 500m
+                          ephemeral-storage: 1Gi
+                          memory: 512Mi
+                      requests:
+                          cpu: 100m
+                          ephemeral-storage: 1Gi
+                          memory: 64Mi
+                  volumeMounts:
+                      - mountPath: /etc/nginx/conf.d
+                        name: server-block
+                - name: mysql
+                  image: "mysql:8"
+                  imagePullPolicy:
+                  resources:
+                    {}
+                  envFrom:
+                      - secretRef:
+                            name: pimcore-demo-mysql-dotenv
+            volumes:
+                - name: server-block
+                  configMap:
+                      name: pimcore-demo-php-nginx-server-block
+                - name: php-ini
+                  configMap:
+                      name: pimcore-demo-phpfpm-ini
+                - name: php-config
+                  configMap:
+                      name: pimcore-demo-phpfpm-conf
+                - name: php-pool-config
+                  configMap:
+                      name: pimcore-demo-phpfpm-pool-conf
+            nodeSelector:
+                cloud.google.com/gke-nodepool: cors-wolke-gke-node-pool-bigger
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: pimcore-demo
+    labels:
+        app.kubernetes.io/name: pimcore-demo
+        app.kubernetes.io/instance: pimcore-demo
+    annotations:
+        kubernetes.io/ingress.class: nginx
+spec:
+    tls:
+        - hosts:
+              - "pimcore-demo.ofcors.cloud"
+          secretName: pimcore-demo-letsencrypt-tls
+    rules:
+        - host: "pimcore-demo.ofcors.cloud"
+          http:
+              paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                        service:
+                            name: pimcore-demo-php
+                            port:
+                                number: 80

@@ -1,0 +1,15 @@
+<li class="nav-item dropdown">
+    <a class="dropdown-toggle py-2 d-none d-md-inline-block menu-icon ml-4" data-toggle="dropdown" href="#">
+        <img src="/static/images/icons/language.svg" />
+    </a>
+    <ul class="dropdown-menu">
+        <span class="dropdown-menu-arrow search arrow"></span>
+        {% for key, lang in get_localized_links(document) %}
+            <li>
+                <a class="dropdown-item" href="{{ lang.link }}">
+                    <img class="language-switcher-img" src="{{ get_language_flag(key) }}" height="20" width="25">
+                    {{ lang.text }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</li>

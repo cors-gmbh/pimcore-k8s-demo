@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="{{ app.request.locale }}">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        {% apply spaceless %}
+            {# add global stylesheets and scripts outside of any blocsk to add them to the helpers before any others assets are added #}
+            {# we use the view helper to have cache buster functionality #}
+            {% do pimcore_head_link().appendStylesheet('https://fonts.googleapis.com/css?family=Hind+Guntur:300,400,500,600,700&display=swap') %}
+            {% do pimcore_head_link().appendStylesheet('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css',null,null,{integrity:"sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T",crossorigin:"anonymous"}) %}
+            {% do pimcore_head_link().appendStylesheet('https://use.fontawesome.com/releases/v5.9.0/css/all.css') %}
+            {% do pimcore_head_link().appendStylesheet(asset('static/lib/magnific/magnific.css'), 'screen') %}
+            {% do pimcore_head_link().appendStylesheet(asset('static/lib/autocompletejs/css/autoComplete.css'), 'screen') %}
+            {% do pimcore_head_link().appendStylesheet('https://use.fontawesome.com/releases/v5.7.0/css/all.css',null,null,{integrity:'sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ',crossorigin:'anonymous'}) %}
+            {% do pimcore_head_link().appendStylesheet(asset('static/css/global.css')) %}
+            {% if editmode %}
+                {% do pimcore_head_link().appendStylesheet(asset('static/css/editmode.css')) %}
+            {% endif %}
+            {% do pimcore_head_script().appendFile('https://code.jquery.com/jquery-3.3.1.slim.min.js',null,null,{ integrity:"sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo",crossorigin:"anonymous"}) %}
+            {% do pimcore_head_script().appendFile('https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js',null,null,{ integrity:"sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1",crossorigin:"anonymous"}) %}
+            {% do pimcore_head_script().appendFile('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js',null,null,{ integrity:"sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM",crossorigin:"anonymous"}) %}
+            {% do pimcore_head_script().appendFile(asset('static/lib/magnific/magnific.js')) %}
+            {% do pimcore_head_script().appendFile(asset('static/lib/autocompletejs/js/autoComplete.min.js')) %}
+            {% do pimcore_head_script().appendFile(asset('static/js/search-autocomplete.js')) %}
+            {% do pimcore_head_script().appendFile(asset('static/js/main.js')) %}
+            {% if not editmode %}
+                    {% do pimcore_head_script().appendFile(asset('static/js/frontend.js')) %}
+            {% endif %}
+
+            {% if not document is defined or not document %}
+                {% set document = pimcore_document(1) %}
+            {% endif %}
+
+            {% if document is instanceof('\\Pimcore\\Model\\Document\\Link') %}
+                {# @var document \Pimcore\Model\Document\Link #}
+                {% set document = document.getObject() %}
+            {% endif %}
+
+            {% if document.getTitle() is not empty %}
+                {% do pimcore_head_title().set(document.getTitle()) %}
+            {% endif %}
+
+            {% if document.getDescription() is not empty %}
+                {% do pimcore_head_meta().setDescription(document.getDescription()) %}
+            {% endif %}
+
+            {% do pimcore_head_title().append('Pimcore Demo') %}
+            {% do pimcore_head_title().setSeparator(' : ') %}
+            {% set isPortal = ((isPortal is defined) and isPortal) %}
+        {% endapply %}
+
+        {# we're using the deferred extension here to make sure this block is rendered after all helper calls #}
+        {% block layout_head_meta deferred %}
+            {{ pimcore_head_title() }}
+            {{ pimcore_head_meta() }}
+
+            {% if pimcore_placeholder('canonical').count() %}
+                <link rel="canonical" href="{{ pimcore_placeholder('canonical') }}"/>
+            {% endif %}
+
+        {% endblock %}
+
+        {% block head_stylesheets deferred %}
+            {{ pimcore_head_link() }}
+        {% endblock %}
+
+    </head>
+    <body>
+        {# get root node if there is no document defined (for pages which are routed directly through static route) #}
+        {% if not document is defined or not document %}
+            {% set document = pimcore_document(1) %}
+        {% endif %}
+
+        <nav class="navbar navbar-expand-md navbar-dark sticky-top py-1 site-header {{ document.getProperty('header_color') }}">
+
+            {# get the document which should be used to start in navigation | default home #}
+            {% set navStartNode = document.getProperty('navigation_root') %}
+
+            {% if not navStartNode is instanceof('\\Pimcore\\Model\\Document') %}
+                {% set navStartNode = pimcore_document(1) %}
+            {% endif %}
+
+            {% set mainNavigation =  app_navigation_data_links(document, navStartNode) %}
+            <div class="container">
+                {#Logo Image#}
+                <a class="py-2 mb-2" href="{{ navStartNode }}">
+                    <img id="logo" src="{{ asset('/static/images/logo.svg') }}" alt="Classic Cars - Pimcore Demo">
+                </a>
+                {#responsive burger menu icon#}
+                <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                {#main header#}
+                <div class="navbar-collapse collapse" id="navbarCollapse">
+                    {#header - generate pimcore navigation #}
+
+
+                    {{
+                        pimcore_render_nav(mainNavigation, 'menu', 'renderMenu', {
+                            maxDepth: 2,
+                            ulClass: {
+                                0: 'navbar-nav menu-links ml-4 m-auto',
+                                1: 'dropdown dropdown-menu',
+                                'default': 'dropdown-menu dropdown-submenu'
+                            }
+                        })
+                    }}
+
+
+                    {#header - navigation icons#}
+                    {{ include('includes/navigation-icons.html.twig') }}
+                </div>
+            </div>
+        </nav>
+        <header></header>
+
+        <main role="main">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+
+            {% if isPortal %}
+                {{ block('content') }}
+            {% else %}
+                <div id="content" class="container">
+                    <div class="row">
+                        {% set leftNavShow = document.getProperty('left_nav_show') %}
+                        {% set showBreadcrumbs = (hideBreadcrumbs is defined) ? not hideBreadcrumbs : true %}
+                        {% set mainColClass = leftNavShow ? 'col-md-9 pt-3 pt-md-5 order-last' : 'col-md-12 pt-3 pt-md-5' %}
+
+                        <div class="{{ mainColClass }}">
+                            {% if showBreadcrumbs %}
+                                {% set mainNavStartNode = document.getProperty('navigation_root') %}
+                                {% if mainNavStartNode is empty %}
+                                    {% set mainNavStartNode = pimcore_document(1) %}
+                                {% endif %}
+
+                                {% set breadbrumbs = pimcore_build_nav({
+                                    active: document,
+                                    root: mainNavStartNode
+                                }) %}
+                                {% do app_navigation_enrich_breadcrumbs(breadbrumbs) %}
+                                {% do pimcore_nav_renderer('breadcrumbs').setMinDepth(null) %}
+
+                                <div class="breadcrumb-header">
+                                    <a href="/">{{ "Home"|trans }}</a> &gt;
+                                    {{ pimcore_render_nav(breadbrumbs, 'breadcrumbs') }}
+                                </div>
+                            {% endif %}
+                            {{ block('content') }}
+                        </div>
+
+                        {% if leftNavShow %}
+                            <div class="col-md-3 pt-3 pt-md-5 order-first sidebar">
+                                <div class="sticky">
+                                    <div class="bs-sidebar hidden-print affix-top" role="complementary">
+                                        {% set leftStartNode = document.getProperty('left_nav_start_node') %}
+                                        {% if leftStartNode is empty %}
+                                            {% set leftStartNode = mainNavStartNode %}
+                                        {% endif %}
+
+                                        {% set leftNav = pimcore_build_nav({
+                                            active: document,
+                                            root: leftStartNode
+                                        }) %}
+
+                                        <h5>{{ leftStartNode.getProperty('navigation_name') }}</h5>
+
+                                        {{ pimcore_render_nav(leftNav, 'menu', 'renderMenu', {
+                                            ulClass: 'nav bs-sidenav',
+                                            expandSiblingNodesOfActiveBranch: true,
+                                        }) }}
+                                    </div>
+                                    {{ pimcore_inc(document.getProperty('sidebar')) }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            <a id="back-to-top" href="#" class="btn btn-primary btn-lg back-to-top" role="button" title="Click to return on the top" data-toggle="tooltip" data-placement="left">
+                <span class="fa fa-arrow-up"></span>
+            </a>
+
+        </main>
+
+        {# include a document-snippet - in this case the footer document #}
+        {{ pimcore_inc(document.getProperty('footer')) }}
+
+        {# output scripts added before #}
+        {% block headscripts deferred %}
+            {{ pimcore_head_script() }}
+        {% endblock %}
+
+
+        {% block inlinescripts deferred %}
+            {{ pimcore_inline_script() }}
+        {% endblock %}
+    </body>
+</html>

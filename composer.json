@@ -1,0 +1,62 @@
+{
+  "name": "pimcore/demo",
+  "type": "project",
+  "description": "Demo Application for Pimcore 6",
+  "license": "GPL-3.0-or-later",
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "discard-changes": true,
+    "process-timeout": 0
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "require": {
+    "hwi/oauth-bundle": "^1.2.0",
+    "php-http/guzzle7-adapter": "^0.1.1",
+    "php-http/httplug-bundle": "^1",
+    "pimcore/customer-management-framework-bundle": "^3.0",
+    "pimcore/pimcore": "^10.0",
+    "pimcore/web2print-tools-bundle": "^4.0",
+    "pimcore/data-hub": "^1.0",
+    "pimcore/payment-provider-unzer": "^1.0"
+  },
+  "conflict": {
+    "hwi/oauth-bundle": "1.4.0"
+  },
+  "suggest": {
+    "elasticsearch/elasticsearch": "Required for Elastic Search service"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/",
+      "Pimcore\\Model\\DataObject\\": "var/classes/DataObject"
+    }
+  },
+  "scripts": {
+    "post-create-project-cmd": "Pimcore\\Composer::postCreateProject",
+    "post-install-cmd": [
+      "Pimcore\\Composer::postInstall",
+      "@pimcore-scripts"
+    ],
+    "post-update-cmd": [
+      "Pimcore\\Composer::postUpdate",
+      "@pimcore-scripts",
+      "Pimcore\\Composer::executeMigrationsUp",
+      "@pimcore-scripts"
+    ],
+    "pimcore-scripts": [
+      "Pimcore\\Composer::clearCache",
+      "Pimcore\\Composer::installAssets"
+    ]
+  },
+  "repositories": {
+    "dev": {
+      "type": "path",
+      "url": "./dev/*/*",
+      "options": {
+        "symlink": true
+      }
+    }
+  }
+}
