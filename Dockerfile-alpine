@@ -1,0 +1,103 @@
+ARG PHP_VERSION=8.0
+ARG NGINX_VERSION=1.21
+ARG NODE_VERSION=14
+
+FROM node:${NODE_VERSION}-alpine AS cors_node
+
+RUN apk add --update python3 make g++\
+   && rm -rf /var/cache/apk/*
+
+WORKDIR /var/www/html
+COPY package.json yarn.lock postcss.config.js webpack.config.js ./
+RUN set -eux; \
+    yarn install; \
+    yarn cache clean;
+
+COPY themes /var/www/html/themes
+
+RUN set -eux; \
+    yarn run encore prod
+
+FROM php:${PHP_VERSION}-fpm-alpine as cors_php
+
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
+ENV TIMEZONE Europe/Vienna
+# Install PHP
+RUN apk add --no-cache \
+      apk-tools autoconf gcc make g++ automake nasm \
+      imagemagick imagemagick-dev curl tzdata freetype libbsd graphviz openssl \
+      ffmpeg html2text ghostscript libreoffice pngcrush jpegoptim \
+      exiftool poppler-utils git wget icu-dev oniguruma-dev \
+      libx11-dev libwebp libwebp-tools cmake unzip libxml2-dev libxslt-dev \
+      xvfb ttf-dejavu ttf-droid ttf-freefont ttf-liberation \
+      libwmf-dev libxext-dev libxt-dev librsvg-dev libzip-dev \
+      libpng-dev libjpeg libxpm libjpeg-turbo-dev imap-dev krb5-dev openssl-dev; \
+    docker-php-ext-install intl mbstring mysqli bcmath bz2 soap xsl pdo pdo_mysql fileinfo exif zip opcache; \
+    docker-php-ext-configure gd -enable-gd --with-freetype --with-jpeg --with-webp; \
+    docker-php-ext-install gd; \
+    pecl install imagick; \
+    pecl install apcu; \
+    pecl install redis; \
+    docker-php-ext-enable redis imagick apcu; \
+    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
+    docker-php-ext-install imap; \
+    docker-php-ext-enable imap; \
+    cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime; \
+    echo "${TIMEZONE}" > /etc/timezone; \
+    apk del tzdata; \
+    rm -rf /var/cache/apk/*;
+
+COPY --from=madnight/alpine-wkhtmltopdf-builder:0.12.5-alpine3.10 \
+    /bin/wkhtmltopdf /bin/wkhtmltopdf
+
+ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_MEMORY_LIMIT -1
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN mkdir -p /usr/local/var/log/php7/
+RUN mkdir -p /usr/local/var/run/
+
+ARG APP_ENV=prod
+
+WORKDIR /var/www/html
+
+ARG APP_ENV=prod
+ENV APP_ENV=$APP_ENV
+ARG COMPOSER_AUTH
+
+COPY composer.* ./
+COPY bin bin/
+COPY public/index.php public/index.php
+COPY public/static public/static
+#Since it's a DEMO we also copy the public/var dir, in a production env you would not do that
+COPY public/var public/var
+#Since it's a DEMO we also copy the dump
+COPY dump dump
+COPY config config/
+COPY src src/
+COPY templates templates/
+COPY translations translations/
+COPY var var/
+COPY .env .env
+COPY .docker/php/docker-entrypoint.sh /usr/local/bin/entrypoint
+COPY .docker/php/docker-install.sh /usr/local/bin/install
+COPY .docker/php/docker-wait-db.sh /usr/local/bin/wait_db
+
+RUN set -eux; \
+    chmod +x /usr/local/bin/entrypoint; \
+    chmod +x /usr/local/bin/install; \
+    chmod +x /usr/local/bin/wait_db; \
+    ls -la config; \
+    composer install --prefer-dist --no-scripts --no-progress; \
+    bin/console cache:clear --env=$APP_ENV; \
+    mkdir -p var/cache var/log; \
+    chmod +x bin/console; \
+    sleep 1; \
+    bin/console assets:install; \
+    #bin/console pimcore:build:classes; \
+    composer dump-autoload --classmap-authoritative; \
+    sync;
+
+ENTRYPOINT ["entrypoint"]
+CMD ["php-fpm"]

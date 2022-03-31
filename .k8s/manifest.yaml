@@ -221,7 +221,7 @@ spec:
                 - name: php
                   securityContext:
                     {}
-                  image: corsgmbh/pimcore-demo:php
+                  image: corsgmbh/pimcore-demo:php-alpine
                   imagePullPolicy: Always
                   ports:
                       - containerPort: 9000

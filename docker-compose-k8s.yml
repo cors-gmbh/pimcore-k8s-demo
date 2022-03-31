@@ -18,6 +18,7 @@ services:
 
   php:
     build:
+      dockerfile: Dockerfile-alpine
       context: ./
       target: cors_php
     container_name: pimcore-demo-php
